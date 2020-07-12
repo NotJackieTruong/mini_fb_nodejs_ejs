@@ -1,0 +1,404 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            background-color: lightgrey;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="host">
+        <style>
+
+        </style>
+    </div>
+
+    <script type="text/javascript">
+        var datas = [{
+                    user: 'user1',
+                    post: 'klsadjfklsdjflkajsd;ljsl;dfj',
+                    likes: '7',
+                    comment: [{
+                        user: 'user2',
+                        user_comment: "something 123"
+                    }, {
+                        user: 'user3',
+                        user_comment: "something new here"
+                    }]
+                }, {
+                    user: 'user2',
+                    post: 'klsadjfklsdjflkajsd;ljsl;dfjasdf123',
+                    likes: '11',
+                    comment: [{
+                        user: 'user2',
+                        user_comment: "something 123"
+                    }, {
+                        user: 'user10',
+                        user_comment: "something def"
+                    }, {
+                        user: 'user8',
+                        user_comment: "something 123"
+                    }]
+                }, {
+                    user: 'user3',
+                    post: 'klsadjfklsdjflkajsd;ljsl;dfjjhkfghjfghj',
+                    likes: '20',
+                    comment: [{
+                        user: 'user2',
+                        user_comment: "something asdf"
+                    }, {
+                        user: 'user3',
+                        user_comment: "something adsf"
+                    }]
+                }, {
+                    user: 'user4',
+                    post: 'klsadjfklsdjflkajsd;ljsl;dfj345345sdaf',
+                    likes: '17',
+                    comment: [{
+                        user: 'user2',
+                        user_comment: "something 123"
+                    }, {
+                        user: 'user2',
+                        user_comment: "something 123"
+                    }, {
+                        user: 'user2',
+                        user_comment: "something 123"
+                    }]
+                },
+
+            ]
+            // template to store posts
+        var mainForm = `
+        <template id="main-template">
+            <style>
+                #main-form{
+                    margin: 1% 5%;
+                }
+            </style>
+            <div id="main-form">
+                <slot name="user"></slot>
+                <slot name="posts"></slot>
+            </div>
+            
+        </template>
+        `
+
+        // template for each post
+        var postForm = `
+            <template id="post-template">
+                <style>
+                    textarea {
+                        font-family: inherit;
+                        width: 30vw;
+                        height: 5vh;
+                        box-sizing: border-box;
+                        border: 1px solid #aaa;
+                        border-radius: 4px;
+                    }
+                    button{
+                       position: relative
+                    }
+                    .post-form{
+                        width: 30vw;
+                        height: fit-content;
+                        padding: 2% 3%;
+                        margin: 5vh 28vw;
+                        background-color: white;
+                    }
+
+                    .user-container{
+                        border-bottom: 0.2px solid lightgrey;
+                    }
+                    .user{
+                        font-weight: bold;
+                        font-size: 25px;
+                    }
+                    .user-post{
+                        border-bottom: 0.2px solid lightgrey;
+                        margin-bottom: 1vh;
+                        padding-bottom: 3vh;
+                    }
+                    .comment-section{
+                        position: relative;
+                    }
+                    .comment-section button{
+                        position: absolute;
+                        bottom: 0;
+                        right: 0;
+                    }
+                    .user-post .user-likes{
+                        width: fit-content;
+                        height: fit-content;
+                        position: relative;          
+                        display: flex;         
+                        float: right;     
+                    }
+                    .user-post like-btn{
+                        height: 20px;
+                    }
+                 
+
+                </style>
+               
+                <div class="post-form">
+                    <div class="user-container">
+                        <slot name="user" class="user"></slot>
+                    
+                    </div>
+                    <div class="user-post">
+                        <slot name="post" ></slot>
+                        <div class="user-likes">
+                            <slot name="like-post"></slot>
+                            
+                            
+                        </div>
+                    
+                    </div>
+                    <div class="comment-section">
+                        <textarea placeholder="Your comment..."></textarea>
+                        <button>Comment</button>
+                    </div>
+                   
+                    <slot name="comments"></slot>
+                </div>
+            </template>
+
+        `
+
+        // template for each comment
+        var commentForm = `
+            <template id="comment-template">
+                <style>
+                    .user-comments{
+                        position: relative;
+                    }
+                    .user-comments .user-info{
+                        display: flex;
+                    }
+                    
+                </style>
+                <div class="user-comments">
+                    <div class="user-info">
+                        <slot name="user-name"></slot>
+                        <slot name="user-comment"></slot>
+                    </div>
+                    
+                    <del-btn></del-btn>
+                </div>
+               
+            </template>
+        `
+
+        // create some custom elements for post form
+        // delete button
+        var delForm = `
+            <template id="del-btn">
+                <style>
+                    button{
+                        width: auto;
+                        height: auto;
+                        position: absolute;
+                        bottom: 0;
+                        right: 0;
+                    }
+                </style>
+                <button>Delete</button>
+            </template>
+        `
+
+        // like button
+        var likeForm = `
+            <template id="like-btn">
+                <style>
+                    .like{
+                        display: flex;
+                    }
+                    button{
+                        width: fit-content;
+                        height: fit-content;
+                        
+                    }
+                </style>
+                <div class="like">
+                    <slot name="likes"></slot>
+                    <button>Like</button>
+                    
+                </div>
+            </template>
+        `
+
+        var shadowDom = document.querySelector('#host').attachShadow({
+            mode: 'open'
+        });
+        shadowDom.innerHTML = mainForm
+        shadowDom.appendChild(shadowDom.querySelector('#main-template').content.cloneNode(true))
+
+        class delBtn extends HTMLElement {
+            constructor() {
+                super()
+                var shadowRoot = this.attachShadow({
+                    mode: 'open'
+                })
+                this.addEventListener('click', function() {
+                    this.parentNode.parentNode.removeChild(this.parentNode)
+                })
+                shadowRoot.innerHTML = delForm
+                var t = shadowRoot.querySelector('#del-btn')
+                shadowRoot.appendChild(t.content.cloneNode(true))
+            }
+        }
+        customElements.define('del-btn', delBtn)
+
+
+        class likeBtn extends HTMLElement {
+            constructor() {
+                super()
+                var shadowRoot = this.attachShadow({
+                    mode: 'open'
+                })
+                this.countClicks = 0
+                var click = 0
+
+                shadowRoot.innerHTML = likeForm
+                var t = shadowRoot.querySelector('#like-btn')
+                shadowRoot.appendChild(t.content.cloneNode(true))
+                this.addEventListener('click', function() {
+                    console.log('slot node for like: ', this.parentNode.querySelector('p[slot="likes"]').innerHTML)
+                    this.parentNode.querySelector('p[slot="likes"]').innerHTML = parseInt(this.parentNode.querySelector('p[slot="likes"]').innerHTML) + 1
+                        // this.countClicks++
+
+                    //     if (click === 0) {
+                    //         this.userLike = document.createElement('p')
+                    //         this.userLike.slot = 'likes'
+                    //         this.userLike.style.margin = '0'
+                    //         this.userLike.style.marginRight = '1vw'
+                    //         this.userLike.innerHTML = this.countClicks + ' like'
+                    //         this.appendChild(this.userLike)
+                    //     } else {
+                    //         this.userLike.innerHTML = this.countClicks + ' likes'
+                    //     }
+                    // click++
+
+
+                })
+
+            }
+        }
+        customElements.define('like-btn', likeBtn)
+
+
+        class commentTemplate extends HTMLElement {
+            constructor() {
+                super()
+                var shadowRoot = this.attachShadow({
+                    mode: 'open'
+                })
+                shadowRoot.innerHTML = commentForm
+                var t = shadowRoot.querySelector('#comment-template')
+                shadowRoot.appendChild(t.content.cloneNode(true))
+            }
+        }
+        customElements.define('comment-template', commentTemplate)
+
+        class postTemplate extends HTMLElement {
+            constructor() {
+                super()
+                var shadowRoot = this.attachShadow({
+                    mode: 'open'
+                })
+                shadowRoot.innerHTML = postForm
+                var t = shadowRoot.querySelector('#post-template')
+                shadowRoot.appendChild(t.content.cloneNode(true))
+                shadowRoot.querySelector('button').addEventListener('click', function() {
+                    if (shadowRoot.querySelector('textarea').value != 0 && shadowRoot.querySelector('textarea').value != null) {
+                        var userComment = document.createElement('comment-template')
+                        userComment.slot = 'comments'
+
+                        var para2 = document.createElement('p')
+                        para2.slot = 'user-comment'
+                        var text_comment = document.createTextNode(shadowRoot.querySelector('textarea').value)
+                        para2.appendChild(text_comment)
+                        userComment.appendChild(para2)
+
+                        var para3 = document.createElement('p')
+                        para3.slot = 'user-name'
+                        para3.style.marginRight = '1vw'
+                        para3.style.fontWeight = "bold"
+                        para3.innerHTML = 'user1'
+                        userComment.appendChild(para3)
+
+                        this.parentNode.parentNode.appendChild(userComment)
+                        console.log('parent: ', this.parentNode.parentNode)
+
+                        shadowRoot.querySelector('textarea').value = ""
+                    } else {
+                        window.alert('You need to add a comment to post')
+                    }
+
+                })
+            }
+        }
+        customElements.define('post-template', postTemplate)
+
+
+        for (let index in datas) {
+            post1 = document.createElement('post-template')
+            post1.slot = 'posts'
+
+            var para = document.createElement('p')
+            para.slot = 'post'
+
+            var text_post = document.createTextNode(datas[index].post)
+            para.appendChild(text_post)
+
+            var userName = document.createElement('p')
+            userName.slot = 'user'
+            userName.appendChild(document.createTextNode(datas[index].user))
+
+            var likeButton = document.createElement('like-btn')
+            likeButton.slot = 'like-post'
+
+            var userLike = document.createElement('p')
+            userLike.slot = 'likes'
+            userLike.style.margin = '0'
+            userLike.style.marginRight = '1vw'
+            userLike.innerHTML = datas[index].likes
+            likeButton.appendChild(userLike)
+
+            for (let comment_index in datas[index].comment) {
+                var userComment = document.createElement('comment-template')
+                userComment.slot = 'comments'
+                var para2 = document.createElement('p')
+                para2.slot = 'user-comment'
+                console.log('user-comment: ', datas[index].comment[comment_index].user_comment)
+                var text_comment = document.createTextNode(datas[index].comment[comment_index].user_comment)
+                para2.appendChild(text_comment)
+                userComment.appendChild(para2)
+
+                var para3 = document.createElement('p')
+                para3.slot = 'user-name'
+                para3.style.marginRight = '1vw'
+                para3.style.fontWeight = "bold"
+                para3.innerHTML = datas[index].comment[comment_index].user
+                userComment.appendChild(para3)
+
+                post1.appendChild(userComment)
+
+            }
+
+
+            post1.appendChild(para)
+            post1.appendChild(userName)
+            post1.appendChild(likeButton)
+
+            shadowDom.appendChild(post1)
+        }
+    </script>
+</body>
+
+</html>

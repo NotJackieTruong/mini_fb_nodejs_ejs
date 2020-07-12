@@ -1,0 +1,25 @@
+.col {
+    padding: 2rem;
+    margin: 1rem auto;
+    background-color: white;
+}
+
+.user-container {
+    color: #385898;
+    font-weight: bold;
+}
+
+.post-section,
+.post-action {
+    border-bottom: 0.5px solid lightgrey;
+    padding-bottom: 1rem;
+}
+
+.write-comment-section input {
+    width: 100%;
+}
+
+.write-comment-section {
+    margin: 1rem auto;
+    display: flex;
+}

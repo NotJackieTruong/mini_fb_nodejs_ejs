@@ -1,0 +1,100 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="">
+    <style>
+        body {
+            background-color: lightgrey;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="host">
+
+    </div>
+
+    <template id="main-template">
+        <style>
+            .user-name,
+            .user-post,
+            .user-comment {
+                border-bottom: 0.5px solid lightgrey;
+                margin-bottom: 1vh;
+                padding: 0.5vh 0;
+            }
+
+            .user-name h4 {
+                margin: 0 0 0.5vh 0;
+            }
+
+            .post-status {
+                display: flex;
+                justify-content: space-between;
+                color: lightslategrey;
+
+            }
+        </style>
+        <p id="test" data-result="<%= result.post_list %>"> </p>
+        <% for(let i in result.post_list){ %>
+        <div class="post" id="<%= result.post_list[i]._id %> "
+            style=" margin: 1vh 25vw; padding: 2vw; background-color: white; width: 25vw; height: fit-content;">
+            <div class="user-name">
+                <h4 id="<%= result.post_list[i].userId %> "><%= result.post_list[i].userId.userName %> </h4>
+            </div>
+            <div class="user-post">
+                <div class="post-text">
+                    <p><%= result.post_list[i].post %> </p>
+                </div>
+                <div class="post-status">
+                    <div class="post-likes">
+                        <p><%= result.post_list[i].like %> likes</p>
+
+                    </div>
+                    <div class="post-comments">
+                        <p>comments</p>
+                    </div>
+                </div>
+                <div class="post-action">
+                    <form action="/like=<%= result.post_list[i]._id %> " method="POST">
+                        <button type="submit">Like</button>
+
+                    </form>
+                </div>
+            </div>
+            <div class="user-comment">
+                <div class="user-comment-section">
+                     <form action="/submit=<%= result.post_list[i]._id %> "  method="POST">
+                        <input type="text" name="userComment" data-post-id="<%= result.post_list[i]._id %> ">
+                        <button type="submit">Submit</button>
+                    </form> 
+                    
+                </div>
+                <div class="comments">
+                <% for(let j in result.comment_list){%>
+                    <% if(JSON.stringify(result.comment_list[j].postId) === JSON.stringify(result.post_list[i]._id)){%>
+                        <p style="font-weight: bold;"><%= result.comment_list[j].userId.userName %><span style="font-weight: normal;"> <%= result.comment_list[j].text %> </span> </p>
+                    <% } %>  
+                    <% } %> 
+                </div>
+            </div>
+        </div>
+        <% } %>
+    </template>
+
+    <script>
+        shadowDom = document.querySelector('#host').attachShadow({
+            mode: 'open'
+        })
+        shadowDom.innerHTML = document.querySelector('#main-template')
+        shadowDom.appendChild(document.querySelector('#main-template').content.cloneNode(true))
+    </script>
+</body>
+
+</html>

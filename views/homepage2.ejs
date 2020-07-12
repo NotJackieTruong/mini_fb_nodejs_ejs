@@ -1,0 +1,686 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            background-color: lightgrey;
+        }
+    </style>
+    <!-- jquery for ajax -->
+    <script src="http://code.jquery.com/jquery-1.6.2.min.js"></script>
+    <!-- bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <!-- general style -->
+    <link rel="stylesheet" type="text/css" href="/stylesheets/style.css">
+    <!-- navbar style -->
+    <link rel="stylesheet" type="text/css" href="/stylesheets/navbar.css">
+</head>
+
+<body>
+    <!-- include navbar partials -->
+    <%- include('navbar.ejs') %>
+        <div class="data-test">
+            <!-- data for post -->
+
+            <% for(var i=0; i<result.post_list.length; i++){ %>
+                <% var jsonData = JSON.stringify(result.post_list[i]);%>
+                    <div class="post-list" data-post-list="<%= jsonData %> "></div>
+
+
+                    <% } %>
+                        <!-- data for each post image -->
+
+                        <% if(imageInfo.length !=0){ %>
+                            <% for(var a=0; a<imageInfo.length; a++){ %>
+                                <div class="post-image" data-post-image="<%= JSON.stringify(imageInfo[a]) %> " data-post-image-id="<%= JSON.stringify(imageInfo[a].post_id) %> "></div>
+
+                                <% } %>
+                                    <% } %>
+
+
+                                        <% if(result.comment_list.length!=0){ %>
+                                            <% for(var j=0; j<result.comment_list.length; j++){ %>
+
+                                                <% var jsonData2 = JSON.stringify(result.comment_list[j]) %>
+                                                    <div class="comment-list" data-comment-list="<%= jsonData2 %> "></div>
+
+
+                                                    <% } %>
+                                                        <% } %>
+
+
+
+
+        </div>
+
+
+        <div id="host">
+            <style>
+
+            </style>
+
+
+        </div>
+        <script type="text/javascript">
+            var myAcc = {
+                "_id": "5ebcc775925fcbd70854e080",
+                "userName": "abc",
+                "age": 15
+            }
+
+            function getId(id) {
+                return id.replace(/['"]+/g, '')
+            }
+
+
+            // template to create post
+            var createPostForm = `
+
+            <template id="create-post-template">
+                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+                <link href="/stylesheets/createPost.css" rel="stylesheet">
+                <div class="container">
+                    <div class="row">
+                        <div class="col col-lg-6">
+                            <textarea name="create-post" id="create-post-textarea" cols="30" rows="10" placeholder="What are you thinking?"></textarea>
+                            <div class="group-btns d-flex justify-content-between">
+                                <button>Create</button>
+                                <div id="drag-file">
+                                    <input id="inp" type="file" multiple>
+                                    <div id="holder" style="width:50px; height:50px; border: 0.5px dashed #ccc"></div>
+                                </div>
+                                <div class="img-display"></div>
+                            </div>
+                            
+                        </div>
+                    </div>    
+                </div>
+                
+            </template>
+        `
+                // template to store posts
+            var mainForm = `
+        <template id="main-template">
+            <style>
+                #main-form{
+                    margin: 1% 5%;
+                }
+            </style>
+            <div id="main-form">
+                <slot name="posts"></slot>
+            </div>
+            
+        </template>
+        `
+
+            // template for each post
+            var postForm = `
+            <template id="post-template">
+                <link href="/stylesheets/post.css" rel="stylesheet">
+                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+               
+                <div class="container">
+                    <div class="row">
+                        <div class="col col-lg-6">
+                            <h5 class="user-container">
+                                <slot name="user"></slot>
+                            </h5>
+                            <div class="post-section">
+                                <slot name="post-text"></slot>
+                                <slot name="post-image"></slot>
+                            </div>
+                            <div class="post-action d-flex justify-content-between">
+                                <slot name="like"></slot>
+                                <slot name="comment"></slot>
+                                <a id="comment">
+                                    <img src="/images/mode_comment-black-18dp.svg" alt="comment"> Comment
+                                </a>
+                            </div>
+                            <div class="post-comment">
+                                <div class="write-comment-section">
+                                    <input type="text" placeholder="Your comment...">
+                                    <button type="submit">Comment</button>
+                                </div>
+                                
+                                <slot name="comments"></slot>
+                                
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+        `
+
+            // template for each comment
+            var commentForm = `
+            <template id="comment-template">
+                <style>
+                    .user-comments{
+                        position: relative;
+                    }
+                    .user-comments .user-info{
+                        display: flex;
+                    }
+                    
+                </style>
+                <div class="user-comments">
+                    <div class="user-info">
+                        <slot name="user-name"></slot>
+                        <slot name="user-comment"></slot>
+                    </div>
+                    <slot name="del-comment"></slot>
+                    
+                </div>
+               
+            </template>
+        `
+
+            // create some custom elements for post form
+            // delete button
+            var delForm = `
+            <template id="del-btn">
+                <style>
+                    button{
+                        width: auto;
+                        height: auto;
+                        position: absolute;
+                        bottom: 0;
+                        right: 0;
+                    }
+                </style>
+                <button>Delete</button>
+            </template>
+        `
+
+            // like button
+            var likeForm = `
+            <template id="like-btn">
+                <style>
+                    .like{
+                        display: flex;
+                    }
+                    button{
+                        width: fit-content;
+                        height: fit-content;
+                        
+                    }
+                    a{
+                        color: #385898;
+                        text-decoration: none;
+                        cursor: pointer;
+                    }
+                    a:visited{
+                        color: #385898;
+                        text-decoration: none;
+                    }
+                </style>
+                <div class="like ">
+                    <slot name="likes"></slot>
+                    <a id="like">
+                        <img src="/images/thumb_up-black-18dp.svg" alt="like"> Like
+                    </a>
+                   
+                    
+                </div>
+            </template>
+        `
+
+            // create button
+            var createForm = `
+            <template id="create-btn">
+                <style>
+                    .like{
+                        display: flex;
+                    }
+                    button{
+                        width: fit-content;
+                        height: fit-content;
+                        position: relative;
+                    }
+
+                </style>
+                <div class="create">
+                    <button>Create</button>
+                    
+                </div>
+            </template>
+        `
+            var shadowDom = document.querySelector('#host').attachShadow({
+                mode: 'open'
+            });
+
+            shadowDom.innerHTML = mainForm
+            shadowDom.appendChild(shadowDom.querySelector('#main-template').content.cloneNode(true))
+
+            class delBtn extends HTMLElement {
+                constructor() {
+                    super()
+                    var shadowRoot = this.attachShadow({
+                        mode: 'open'
+                    })
+
+                    shadowRoot.innerHTML = delForm
+                    var t = shadowRoot.querySelector('#del-btn')
+                    shadowRoot.appendChild(t.content.cloneNode(true))
+                    this.addEventListener('click', function() {
+                        var commentTemplate = this.parentNode.parentNode.querySelector('comment-template')
+                        var dataObj = {
+                            _id: commentTemplate.id
+                        }
+                        $.ajax({
+                            type: 'POST',
+                            data: JSON.stringify(dataObj),
+                            contentType: 'application/json',
+                            url: "http://localhost:3000/del",
+                            success: function(data) {
+                                console.log('success')
+                            }
+                        })
+                        this.parentNode.parentNode.removeChild(this.parentNode)
+                    })
+                }
+            }
+            customElements.define('del-btn', delBtn)
+
+            class likeBtn extends HTMLElement {
+                constructor() {
+                    super()
+                    var shadowRoot = this.attachShadow({
+                        mode: 'open'
+                    })
+                    this.countClicks = 0
+                    var click = 0
+
+                    shadowRoot.innerHTML = likeForm
+                    var t = shadowRoot.querySelector('#like-btn')
+                    shadowRoot.appendChild(t.content.cloneNode(true))
+                    this.addEventListener('click', function() {
+                        var postTemplate = this.parentNode.parentNode.querySelector('post-template[id="' + this.parentNode.id + '"]')
+                        var dataObj = {
+                            _id: this.parentNode.id,
+                            userId: postTemplate.getAttribute('userId'),
+                            post: postTemplate.getAttribute('post'),
+                            like: postTemplate.getAttribute('like')
+
+                        }
+                        $.ajax({
+                            type: 'POST',
+                            data: JSON.stringify(dataObj),
+                            contentType: 'application/json',
+                            url: "http://localhost:3000/like",
+                            success: function(data) {
+                                console.log('success')
+                            }
+                        })
+                        this.parentNode.querySelector('p[slot="likes"]').innerHTML = parseInt(this.parentNode.querySelector('p[slot="likes"]').innerHTML) + 1
+
+
+                    })
+
+                }
+            }
+            customElements.define('like-btn', likeBtn)
+
+            class createBtn extends HTMLElement {
+                constructor() {
+                    super()
+                    var shadowRoot = this.attachShadow({
+                        mode: 'open'
+                    })
+                    shadowRoot.innerHTML = createForm
+                    var t = shadowRoot.querySelector('#create-btn')
+                    shadowRoot.appendChild(t.content.cloneNode(true))
+                    this.addEventListener('click', function() {
+                        console.log('parent: ', this.parentNode)
+
+                    })
+                }
+            }
+            customElements.define('create-btn', createBtn)
+
+            // comment template
+            class commentTemplate extends HTMLElement {
+                constructor() {
+                    super()
+                    var shadowRoot = this.attachShadow({
+                        mode: 'open'
+                    })
+
+                    shadowRoot.innerHTML = commentForm
+                    var t = shadowRoot.querySelector('#comment-template')
+                    shadowRoot.appendChild(t.content.cloneNode(true))
+
+
+                }
+            }
+            customElements.define('comment-template', commentTemplate)
+
+            // post template
+            class postTemplate extends HTMLElement {
+                constructor() {
+                    super()
+                    var shadowRoot = this.attachShadow({
+                        mode: 'open'
+                    })
+                    shadowRoot.innerHTML = postForm
+                    var t = shadowRoot.querySelector('#post-template')
+                    shadowRoot.appendChild(t.content.cloneNode(true))
+                    shadowRoot.querySelector('button').addEventListener('click', () => {
+                        if (shadowRoot.querySelector('input').value != 0 && shadowRoot.querySelector('input').value != null) {
+                            var dataObj = {
+                                postId: this.id,
+                                userId: getId(myAcc._id),
+                                text: shadowRoot.querySelector('input').value
+
+                            }
+                            console.log('user comment: ', dataObj)
+                            $.ajax({
+                                type: 'POST',
+                                data: JSON.stringify(dataObj),
+                                contentType: 'application/json',
+                                url: "http://localhost:3000/",
+                                success: function(data) {
+                                    console.log('success')
+
+
+                                }
+                            })
+                            var userComment = document.createElement('comment-template')
+                            userComment.slot = 'comments'
+
+                            var para2 = document.createElement('p')
+                            para2.slot = 'user-comment'
+                            var text_comment = document.createTextNode(shadowRoot.querySelector('input').value)
+                            para2.appendChild(text_comment)
+                            userComment.appendChild(para2)
+
+                            var para3 = document.createElement('p')
+                            para3.slot = 'user-name'
+                            para3.style.marginRight = '1vw'
+                            para3.style.fontWeight = "bold"
+                            para3.innerHTML = myAcc.userName
+                            userComment.appendChild(para3)
+
+                            var delButton = document.createElement('del-btn')
+                            delButton.slot = 'del-comment'
+                            userComment.appendChild(delButton)
+
+                            this.appendChild(userComment)
+                            shadowRoot.querySelector('input').value = ""
+
+                        } else {
+                            window.alert('You need to add a comment to post')
+                        }
+
+                    })
+                }
+            }
+            customElements.define('post-template', postTemplate)
+
+            // 'create post' template
+            class createPost extends HTMLElement {
+                constructor() {
+                    super()
+                    var shadowRoot = this.attachShadow({
+                        mode: 'open'
+                    })
+
+                    shadowRoot.innerHTML = createPostForm
+                    var t = shadowRoot.querySelector('#create-post-template')
+                    shadowRoot.appendChild(t.content.cloneNode(true))
+
+                    // function to create base64 of an image
+                    function readFile() {
+
+
+                        for (var i = 0; i < this.files.length; i++) {
+                            var FR = new FileReader();
+
+                            FR.onload = function(e) {
+                                // shadowRoot.querySelector('#img-src').setAttribute('data-image-src', e.target.result)
+                                var image = document.createElement('img')
+                                image.className = 'choosen-image'
+                                image.src = e.target.result
+                                image.style.display = 'none'
+
+                                shadowRoot.querySelector('.img-display').appendChild(image)
+
+                            };
+                            console.log('choosen files: ', this.files[i])
+                            FR.readAsDataURL(this.files[i]);
+                        }
+
+
+                    }
+                    shadowRoot.querySelector('#inp').addEventListener('change', readFile)
+
+                    function readFileOnDrag(files) {
+                        for (var i = 0; i < files.length; i++) {
+                            var FR = new FileReader();
+
+                            FR.onload = function(e) {
+                                // shadowRoot.querySelector('#img-src').setAttribute('data-image-src', e.target.result)
+                                var image = document.createElement('img')
+                                image.className = 'choosen-image'
+                                image.src = e.target.result
+                                image.style.display = 'none'
+
+                                shadowRoot.querySelector('.img-display').appendChild(image)
+
+                            };
+                            console.log('choosen files: ', files[i])
+                            FR.readAsDataURL(files[i]);
+                        }
+                    }
+
+                    // handle dragging and dropping files
+                    var holder = shadowRoot.querySelector('#holder')
+                    holder.ondragover = function() {
+                        this.className = 'hover';
+                        return false;
+                    };
+                    holder.ondragend = function() {
+                        this.className = '';
+                        return false;
+                    };
+                    holder.ondrop = function(e) {
+                            this.className = '';
+                            e.preventDefault();
+                            readFileOnDrag(e.dataTransfer.files);
+                        }
+                        // handle clicking create button
+                    shadowRoot.querySelector('button').addEventListener('click', function() {
+                        // var imageSrc = JSON.stringify(shadowRoot.querySelector('#img-src').getAttribute('data-image-src'))
+
+                        if (shadowRoot.querySelector('textarea').value != 0 && shadowRoot.querySelector('textarea').value != null) {
+                            var imageArr = []
+                            var choosenImgArr = shadowRoot.querySelectorAll('img[class="choosen-image"]')
+                            for (var i = 0; i < choosenImgArr.length; i++) {
+                                imageArr.push(choosenImgArr[i].getAttribute('src'))
+                            }
+                            var dataObj = {
+                                userId: getId(myAcc._id),
+                                post: shadowRoot.querySelector('textarea').value,
+                                like: 0,
+                                image: imageArr
+                            }
+
+                            $.ajax({
+                                type: 'POST',
+                                data: JSON.stringify(dataObj),
+                                contentType: 'application/json',
+                                url: "http://localhost:3000/create_post",
+                                success: function(data) {
+                                    console.log('success')
+                                }
+                            })
+
+
+                            var post = document.createElement('post-template')
+                            post.slot = 'posts'
+                            post.id = data._id
+                            post.setAttribute('userId', dataObj.userId)
+                            post.setAttribute('post', dataObj.post)
+                            post.setAttribute('like', dataObj.like)
+                            var text_post = document.createElement('p')
+                            text_post.slot = 'post'
+                            text_post.appendChild(document.createTextNode(dataObj.post))
+
+                            var userName = document.createElement('p')
+                            userName.slot = 'user'
+                            userName.appendChild(document.createTextNode(myAcc.userName))
+
+                            var likeButton = document.createElement('like-btn')
+                            likeButton.slot = 'like-post'
+
+                            var userLike = document.createElement('p')
+                            userLike.slot = 'likes'
+                            userLike.style.margin = '0'
+                            userLike.style.marginRight = '1vw'
+                            userLike.innerHTML = dataObj.like
+                            likeButton.appendChild(userLike)
+
+                            var imagePostSec = document.createElement('div')
+                            imagePostSec.slot = 'image-post'
+                            imagePostSec.style.display = 'flex'
+                            for (var a = 0; a < imageArr.length; a++) {
+                                // image array for a post with multiple images
+                                // console.log('image id: ', imageInfo.post_id, ', post id: ', data._id)
+                                var postImage = document.createElement('img')
+                                postImage.src = imageArr[a]
+                                postImage.style.width = '10vw'
+                                postImage.style.height = '15vh'
+                                imagePostSec.appendChild(postImage)
+
+                            }
+
+                            post.appendChild(text_post)
+                            post.appendChild(userName)
+                            post.appendChild(likeButton)
+                            post.appendChild(imagePostSec)
+                            shadowDom.appendChild(post)
+                            shadowRoot.querySelector('textarea').value = ""
+                        } else {
+                            window.alert('You need to write something to post')
+                        }
+
+
+                    })
+
+                }
+            }
+            customElements.define('create-post-template', createPost)
+
+            // create 'create post' section
+            var createPostSection = document.createElement('create-post-template')
+
+            shadowDom.appendChild(createPostSection)
+
+
+            // get data from id of div
+            var postList = document.querySelectorAll('.post-list')
+            var commentList = document.querySelectorAll('.comment-list')
+            var imageList = document.querySelectorAll('.post-image')
+
+            for (var i = 0; i < postList.length; i++) {
+                var data = JSON.parse(postList[i].getAttribute('data-post-list'))
+                var post = document.createElement('post-template')
+                post.slot = 'posts'
+                post.id = data._id
+                post.setAttribute('userId', data.user._id)
+                post.setAttribute('post', data.text)
+                post.setAttribute('like', data.like)
+                var text_post = document.createElement('p')
+                text_post.slot = 'post-text'
+                text_post.appendChild(document.createTextNode(data.text))
+
+                var userName = document.createElement('p')
+                userName.slot = 'user'
+                userName.appendChild(document.createTextNode(data.user.name))
+
+                var likeButton = document.createElement('like-btn')
+                likeButton.slot = 'like'
+
+                var userLike = document.createElement('p')
+                userLike.slot = 'likes'
+                userLike.style.margin = '0'
+                userLike.style.marginRight = '0.5rem'
+                userLike.innerHTML = data.like
+                likeButton.appendChild(userLike)
+
+                var imagePostSec = document.createElement('div')
+                imagePostSec.slot = 'post-image'
+                imagePostSec.style.display = 'flex'
+                for (var a = 0; a < imageList.length; a++) {
+                    var imageInfo = JSON.parse(imageList[a].getAttribute('data-post-image'))
+                        // image array for a post with multiple images
+
+
+                    if (JSON.stringify(imageInfo.post_id) === JSON.stringify(data._id)) {
+                        var postImage = document.createElement('img')
+                        postImage.src = imageInfo.image_path
+                        postImage.alt = imageInfo.image_name
+                        postImage.id = imageInfo.post_id
+                        postImage.style.width = '10vw'
+                        postImage.style.height = '15vh'
+                        imagePostSec.appendChild(postImage)
+                    }
+                }
+
+
+
+                if (commentList.length != 0) {
+                    for (var j = 0; j < commentList.length; j++) {
+                        var data2 = JSON.parse(commentList[j].getAttribute('data-comment-list'))
+                        if (JSON.stringify(data2.post) === JSON.stringify(data._id)) {
+                            var userComment = document.createElement('comment-template')
+                            userComment.slot = 'comments'
+                            userComment.id = data2._id
+
+                            var para2 = document.createElement('p')
+                            para2.slot = 'user-comment'
+                            var text_comment = document.createTextNode(data2.text)
+                            para2.appendChild(text_comment)
+                            userComment.appendChild(para2)
+
+                            var delButton = document.createElement('del-btn')
+                            delButton.slot = 'del-comment'
+                            var para3 = document.createElement('p')
+                            para3.slot = 'user-name'
+                            para3.style.marginRight = '1vw'
+                            para3.style.fontWeight = "bold"
+                            para3.innerHTML = data.user.name
+                            userComment.appendChild(para3)
+                            userComment.appendChild(delButton)
+
+                            post.appendChild(userComment)
+                        }
+
+
+                    }
+                }
+
+
+                post.appendChild(text_post)
+                post.appendChild(userName)
+                post.appendChild(likeButton)
+                post.appendChild(imagePostSec)
+
+                shadowDom.appendChild(post)
+            }
+        </script>
+
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script> -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+
+
+</html>
